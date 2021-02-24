@@ -1,17 +1,53 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React, {useState, createContext, useContext } from 'react'
+import {Route, Redirect, BrowserRouter} from 'react-router-dom'
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+export const GuardContext = createContext()
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+export const GuardProvider = (props) => {
+    const [roles, setRoles] = useState([])
+    const [permissions, setPermissions] = useState([])
+    const [unAuthorizationPath, setUnAuthorizationPath] = useState('' )
+
+    return (
+        <GuardContext.Provider value={{roles, setRoles, permissions, setPermissions, unAuthorizationPath, setUnAuthorizationPath}}>
+            {props.children}
+        </GuardContext.Provider>
+    )
+}
+
+// export const RouteGuard = ({children, ...rest}) => {
+export const RouteGuard = (props) => {
+    const {permissions, unAuthorizationPath} = useContext(GuardContext)
+    const checkPermission = () => {
+        if(permissions.includes(props.can)){
+            return true
+        } else {
+            return false
+        }
+    }
+
+    return (
+        checkPermission() ?
+            <Route {...props}/>
+            :
+            <Redirect to={unAuthorizationPath} />
+    )
+}
+
+export const HasRole = (role) => {
+    const {roles} = useContext(GuardContext)
+    if(roles.includes(role)){
+        return true
+    } else {
+        return false
+    }
+}
+
+export const HasPermission = (permission) => {
+    const { permissions } = useContext(GuardContext)
+    if(permissions.includes(permission)){
+        return true
+    } else {
+        return false
+    }
+}
